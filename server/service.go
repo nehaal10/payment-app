@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,7 +14,7 @@ import (
 
 func Run(address string, router http.Handler) {
 	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, syscall.SIGTERM, syscall.SIGINT)
+	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
 	srv := &http.Server{
 		Addr:    ":" + address,
@@ -20,9 +22,8 @@ func Run(address string, router http.Handler) {
 	}
 
 	go func() {
-		err := srv.ListenAndServe()
-		if err != nil {
-			panic(err)
+		if err := srv.ListenAndServe(); errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("HTTP server error: %v", err)
 		}
 	}()
 	<-signalChan
