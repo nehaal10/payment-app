@@ -1,0 +1,9 @@
+{
+    "server":{
+        "session_timeout": "15",
+        "address":"8080"
+    },
+    "db": {
+        "type": "dev"
+    }
+}
