@@ -10,33 +10,58 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 )
 
-func Run(address string, router http.Handler) {
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+type HttpServer struct {
+	Address string
+	Stop    context.CancelFunc
+	ErrGrp  *errgroup.Group
+	Ctx     context.Context
+	Router  http.Handler
+	Server  *http.Server
+}
 
-	srv := &http.Server{
+func (srv *HttpServer) Run(address string) {
+	server := &http.Server{
 		Addr:    ":" + address,
-		Handler: router,
+		Handler: srv.Router,
 	}
 
+	srv.Server = server
+
 	go func() {
-		if err := srv.ListenAndServe(); errors.Is(err, http.ErrServerClosed) {
+		if err := server.ListenAndServe(); errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("HTTP server error: %v", err)
 		}
 	}()
-	<-signalChan
-	shutDown(srv)
+
+	<-srv.Ctx.Done()
+	srv.Stop()
+	srv.shutDown()
 }
 
-func shutDown(srv *http.Server) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(5*time.Second))
+func CreateServer(address string) (srv *HttpServer) {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	errGrp, errCtx := errgroup.WithContext(ctx)
+
+	srv = &HttpServer{
+		Address: address,
+		Stop:    stop,
+		ErrGrp:  errGrp,
+		Ctx:     errCtx,
+	}
+
+	return srv
+}
+
+func (srv *HttpServer) shutDown() {
+	_, cancel := context.WithTimeout(srv.Ctx, time.Duration(5*time.Second))
 	defer func() {
 		cancel()
 	}()
-
-	err := srv.Shutdown(ctx)
+	err := srv.Server.Shutdown(srv.Ctx)
 	if err != nil {
 		panic(err)
 	}

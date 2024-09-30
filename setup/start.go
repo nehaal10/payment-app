@@ -7,6 +7,8 @@ import (
 func Start(address string) {
 	// setup up tracer
 	// call the run
-	router := service.RouteInitilize()
-	service.Run(address, router)
+	srv := service.CreateServer(address)
+	router := service.RouteInitilize(srv.Ctx)
+	srv.Router = router
+	srv.Run(address)
 }
