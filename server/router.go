@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"payment/app/handlers"
-	"payment/app/utils"
+	"payment/app/internal"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,7 +22,7 @@ type GohttpType func(*gin.Context, context.Context)
 
 func GinTopGoHttp(handler GohttpType) func(ctx *gin.Context) {
 	return func(gctx *gin.Context) {
-		ctx := utils.GetCTXFromGinCtx(gctx)
+		ctx := internal.GetCTXFromGinCtx(gctx)
 
 		handler(gctx, ctx)
 	}

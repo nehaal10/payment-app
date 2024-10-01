@@ -24,8 +24,6 @@ func main() {
 	dbupgrade, dbInstall, env := parseCommandLineArgs()
 
 	// inititate logger
-	// inittate the background job
-
 	if len(dbInstall) > 0 {
 		//install the DB
 	}
@@ -42,10 +40,5 @@ func main() {
 	}
 
 	setup.Start(config.Server.Address)
-
-	// parse the commandline args
-	// check if db must be installed
-	// check if dbupgrade is needed
-	// call setup.go
 
 }
