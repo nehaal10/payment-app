@@ -1,9 +1,14 @@
 package main
 
 import (
+	"errors"
 	"flag"
+	"fmt"
+	"payment/app/internal/logger"
 	"payment/app/setup"
 	"payment/app/utils"
+
+	"go.uber.org/zap/zapcore"
 )
 
 func parseCommandLineArgs() (string, string, string) {
@@ -24,6 +29,15 @@ func main() {
 	dbupgrade, dbInstall, env := parseCommandLineArgs()
 
 	// inititate logger
+
+	l := logger.NewCustomLogger(zapcore.DebugLevel)
+	fmt.Println(l.Logger.Level())
+	log := logger.GetLogger(l.Logger)
+	log.Debug("sds", "ff", "dfsf", "Ff", "sfsf")
+	log.Info("sds", "ff", "dfsf", "Ff", "sfsf")
+	log.Error("sds", "ff", "dfsf", "Ff", "sfsf", errors.New("fdfs"))
+	log.Fatal("sds", "ff", "dfsf", "Ff", "sfsf", errors.New("fdfs"))
+
 	if len(dbInstall) > 0 {
 		//install the DB
 	}
@@ -39,6 +53,6 @@ func main() {
 		panic(err)
 	}
 
-	setup.Start(config.Server.Address)
+	setup.Start(config.Server.Address, l.Logger)
 
 }

@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -23,7 +24,7 @@ type HttpServer struct {
 	Server  *http.Server
 }
 
-func (srv *HttpServer) Run(address string) {
+func (srv *HttpServer) Run(address string, l *zap.Logger) {
 	server := &http.Server{
 		Addr:    ":" + address,
 		Handler: srv.Router,
